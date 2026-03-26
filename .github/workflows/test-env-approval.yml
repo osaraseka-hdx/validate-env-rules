@@ -1,0 +1,44 @@
+name: Test Environment Approval
+
+on:
+  workflow_dispatch:
+
+jobs:
+  before-approval:
+    name: Before approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print info
+        run: |
+          echo "This job runs automatically"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Time: $(date -u)"
+
+      - name: Post summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## Pre-approval step completed
+
+          ✅ This ran without approval.
+
+          ⏳ The next job requires approval via the `kubeconfig-rotation` environment.
+          EOF
+
+  after-approval:
+    name: After approval
+    needs: before-approval
+    runs-on: ubuntu-latest
+    environment: kubeconfig-rotation
+    steps:
+      - name: Print info
+        run: |
+          echo "This job only runs after approval"
+          echo "Approved at: $(date -u)"
+
+      - name: Post summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## Post-approval step completed
+
+          ✅ Approval gate worked. This ran only after a reviewer approved.
+          EOF
